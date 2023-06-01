@@ -7,4 +7,6 @@ Route::group(array('prefix' => '/v1'), function () {
     Route::post('/register', 'App\Http\Controllers\AuthController@register');
     Route::post('/queryWalletBalance', 'App\Http\Controllers\AuthController@queryWalletBalance');
     Route::post('/make-payment', 'App\Http\Controllers\PaymentController@makePayment');
+    Route::post('/validateAccount', 'App\Http\Controllers\AuthController@validateAccount');
+    Route::post('/authorizePayment', 'App\Http\Controllers\PaymentController@authorizePayment');
 });

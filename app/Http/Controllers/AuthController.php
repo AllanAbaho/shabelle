@@ -109,9 +109,9 @@ class AuthController extends Controller
             Log::info('Validate Account Request', [$request]);
             $walletId = $request->get('walletId');
             if (isset($walletId)) {
-                $url = env('SHABELLE_GATEWAY') . '/validateAccount';
+                $url = env('SHABELLE_GATEWAY') . '/queryAccountDetails';
                 $post_data = [
-                    'walletId' => $walletId,
+                    'username' => $walletId,
                 ];
                 $ch = curl_init($url);
                 curl_setopt($ch, CURLOPT_POST, 1);

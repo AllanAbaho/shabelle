@@ -52,9 +52,11 @@ class PaymentController extends Controller
                     'fromCurrency' => $fromCurrency,
                     'toCurrency' => $toCurrency,
                     'fromAmount' => $fromAmount,
+                    "phoneNumber"=>$fromAccount,
                     'toAmount' => $toAmount,
                     'osType' => $osType,
                     'walletId' => $walletId,
+                    'location' => 'Ethiopia'
                 ];
 
                 $ch = curl_init($url);
