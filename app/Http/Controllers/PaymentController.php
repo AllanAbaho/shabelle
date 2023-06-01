@@ -30,7 +30,7 @@ class PaymentController extends Controller
                 $appVersion = '4.0.0+46';
                 $checkoutMode = 'SHABELLEWALLET';
                 $walletId = $fromAccount;
-                $debitType = 'SHABELLEWALLET';
+                $debitType = 'WALLET';
                 $fromCurrency = 'UGX';
                 $toCurrency = 'UGX';
                 $fromAmount = $transactionAmount;
