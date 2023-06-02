@@ -150,9 +150,6 @@ class PaymentController extends Controller
             $endDate = $request->get('endDate');
 
             if (isset($username) && isset($startDate) && isset($endDate)) {
-                $appVersion = '4.0.0+46';
-                $checkoutMode = 'SHABELLEWALLET';
-                $osType = 'ANDROID';
                 $url = env('SHABELLE_GATEWAY') . '/getClientTransactionStatement';
                 $post_data = [
                     'username' => $username,
