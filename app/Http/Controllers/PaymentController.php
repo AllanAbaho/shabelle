@@ -141,6 +141,54 @@ class PaymentController extends Controller
         }
     }
 
+    public function getTransactions(Request $request)
+    {
+        try {
+            Log::info('Get Transactions Request', [$request]);
+            $username = $request->get('username');
+            $startDate = $request->get('startDate');
+            $endDate = $request->get('endDate');
+
+            if (isset($username) && isset($startDate) && isset($endDate)) {
+                $appVersion = '4.0.0+46';
+                $checkoutMode = 'SHABELLEWALLET';
+                $osType = 'ANDROID';
+                $url = env('SHABELLE_GATEWAY') . '/getClientTransactionStatement';
+                $post_data = [
+                    'username' => $username,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                ];
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+                curl_setopt($ch, CURLOPT_TIMEOUT, 0);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization: Basic ' . base64_encode(env('SHABELLE_GATEWAY_USERNAME') . ':' . env('SHABELLE_GATEWAY_PASSWORD'))));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $result = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    $error_msg = curl_error($ch);
+                    Log::info('Get Transactions Curl Error', [$error_msg]);
+                    return response(['status' => 'FAIL', 'message' => $error_msg]);
+                }
+                curl_close($ch);
+                $result = (json_decode($result, true));
+                Log::info('Get Transactions Response', [$result]);
+                return response([
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'transactions' => $result['appTransactions'] ?? [],
+                ]);
+            } else {
+                return response(['status' => 'FAIL', 'message' => 'Invalid request, some parameters were not passed in the payload. Please update your app from google play store.']);
+            }
+        } catch (Exception $e) {
+            Log::info('Get Transactions Exception Error', [$e->getMessage()]);
+            return response(['status' => 'FAIL', 'message' => $e->getMessage()]);
+        }
+    }
+
     public function register(Request $request)
     {
         try {
