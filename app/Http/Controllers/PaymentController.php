@@ -27,6 +27,7 @@ class PaymentController extends Controller
 
             if (isset($toAccount) && isset($fromAccount) && isset($transactionAmount) && isset($narration) && isset($serviceName) && isset($senderName) && isset($receiverName)) {
                 $transactionId = mt_rand(10000000, 99999999) . $senderName;
+                $transactionId = str_replace(' ', '', $transactionId);
                 $appVersion = '4.0.0+46';
                 $checkoutMode = 'SHABELLEWALLET';
                 $walletId = $fromAccount;
@@ -52,7 +53,7 @@ class PaymentController extends Controller
                     'fromCurrency' => $fromCurrency,
                     'toCurrency' => $toCurrency,
                     'fromAmount' => $fromAmount,
-                    "phoneNumber"=>$fromAccount,
+                    "phoneNumber" => $fromAccount,
                     'toAmount' => $toAmount,
                     'osType' => $osType,
                     'walletId' => $walletId,
@@ -73,17 +74,98 @@ class PaymentController extends Controller
                 }
                 curl_close($ch);
                 $result = (json_decode($result, true));
-                Log::info('Payment Response', [$result]);
+                Log::info('Payment Response', [$result, $transactionId]);
                 return response([
                     'status' => $result['status'],
                     'message' => $result['message'],
                     'transactionId' => $result['transactionid'],
+                    'appTransactionId' => $transactionId
                 ]);
             } else {
                 return response(['status' => 'FAIL', 'message' => 'Invalid request, some parameters were not passed in the payload. Please update your app from google play store.']);
             }
         } catch (Exception $e) {
             Log::info('Payment Exception Error', [$e->getMessage()]);
+            return response(['status' => 'FAIL', 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function processUtilityPayment(Request $request)
+    {
+        try {
+            Log::info('Process Utility Payment Request', [$request]);
+            $toAccount = $request->get('toAccount');
+            $fromAccount = $request->get('fromAccount');
+            $transactionAmount = $request->get('transactionAmount');
+            $narration = $request->get('narration');
+            $serviceName = $request->get('serviceName');
+            $senderName = $request->get('senderName');
+            $receiverName = $request->get('receiverName');
+
+            if (isset($toAccount) && isset($fromAccount) && isset($transactionAmount) && isset($narration) && isset($serviceName) && isset($senderName) && isset($receiverName)) {
+                $transactionId = mt_rand(10000000, 99999999) . $senderName;
+                $transactionId = str_replace(' ', '', $transactionId);
+                $appVersion = '4.0.0+46';
+                $checkoutMode = 'SHABELLEWALLET';
+                $walletId = $fromAccount;
+                $debitType = 'WALLET';
+                $fromCurrency = 'UGX';
+                $toCurrency = 'UGX';
+                $fromAmount = $transactionAmount;
+                $toAmount = $transactionAmount;
+                $osType = 'ANDROID';
+                $url = env('SHABELLE_GATEWAY') . '/processUtilityPayment';
+                $post_data = [
+                    'toAccount' => $toAccount,
+                    'fromAccount' => $fromAccount,
+                    'transactionAmount' => $transactionAmount,
+                    'narration' => $narration,
+                    'utilityName' => $serviceName,
+                    'senderName' => $senderName,
+                    'receiverName' => $receiverName,
+                    'transactionId' => $transactionId,
+                    'appVersion' => $appVersion,
+                    'checkoutMode' => $checkoutMode,
+                    'debitType' => $debitType,
+                    'fromCurrency' => $fromCurrency,
+                    'toCurrency' => $toCurrency,
+                    'fromAmount' => $fromAmount,
+                    "phoneNumber" => $fromAccount,
+                    'toAmount' => $toAmount,
+                    'osType' => $osType,
+                    'walletId' => $walletId,
+                    'location' => 'Ethiopia',
+                    "authCode" => "84848",
+                    "tranCharge" => "300",
+                    "serviceFee" => "0"
+                ];
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+                curl_setopt($ch, CURLOPT_TIMEOUT, 0);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization: Basic ' . base64_encode(env('SHABELLE_GATEWAY_USERNAME') . ':' . env('SHABELLE_GATEWAY_PASSWORD'))));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $result = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    $error_msg = curl_error($ch);
+                    Log::info('Process Utility Payment Curl Error', [$error_msg]);
+                    return response(['status' => 'FAIL', 'message' => $error_msg]);
+                }
+                curl_close($ch);
+                $result = (json_decode($result, true));
+                Log::info('Process Utility Payment Response', [$result, $transactionId]);
+                return response([
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'transactionId' => $result['transactionid'],
+                    'appTransactionId' => $transactionId
+                ]);
+            } else {
+                return response(['status' => 'FAIL', 'message' => 'Invalid request, some parameters were not passed in the payload. Please update your app from google play store.']);
+            }
+        } catch (Exception $e) {
+            Log::info('Process Utility Payment Exception Error', [$e->getMessage()]);
             return response(['status' => 'FAIL', 'message' => $e->getMessage()]);
         }
     }
@@ -182,6 +264,41 @@ class PaymentController extends Controller
             }
         } catch (Exception $e) {
             Log::info('Get Transactions Exception Error', [$e->getMessage()]);
+            return response(['status' => 'FAIL', 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function checkStatus(Request $request)
+    {
+        try {
+            Log::info('check Status Request', [$request]);
+            $transactionId = $request->get('transactionId');
+
+            if (isset($transactionId)) {
+                $url = env('SHABELLE_GATEWAY') . '/getTransactionStatus/' . $transactionId;
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 0);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization: Basic ' . base64_encode(env('SHABELLE_GATEWAY_USERNAME') . ':' . env('SHABELLE_GATEWAY_PASSWORD'))));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $result = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    $error_msg = curl_error($ch);
+                    Log::info('check Status Curl Error', [$error_msg]);
+                    return response(['status' => 'FAIL', 'message' => $error_msg]);
+                }
+                curl_close($ch);
+                $result = (json_decode($result, true));
+                Log::info('check Status Response', [$result]);
+                return response([
+                    'status' => $result['status'],
+                    'message' => $result['message'] ?? '',
+                    'finalStatus' => $result['finalStatus'] ?? '',
+                ]);
+            } else {
+                return response(['status' => 'FAIL', 'message' => 'Invalid request, some parameters were not passed in the payload. Please update your app from google play store.']);
+            }
+        } catch (Exception $e) {
+            Log::info('check Status Exception Error', [$e->getMessage()]);
             return response(['status' => 'FAIL', 'message' => $e->getMessage()]);
         }
     }

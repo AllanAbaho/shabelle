@@ -192,7 +192,7 @@ class AuthController extends Controller
             Log::info('Query Wallet Balance Request', [$request]);
             $username = $request->get('username');
             if (isset($username)) {
-                $url = env('SHABELLE_GATEWAY') . '/QueryWalletBalance';
+                $url = env('SHABELLE_GATEWAY') . '/queryWalletBalance';
                 $post_data = [
                     'username' => $username,
                 ];
