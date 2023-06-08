@@ -12,6 +12,104 @@ class PaymentController extends Controller
     // {
     //     $this->middleware('auth.basic');
     // }
+    public function validateMobileMoney(Request $request)
+    {
+        try {
+            Log::info('Validate Mobile Money Number Request', [$request]);
+            $accountNumber = $request->get('accountNumber');
+            $transactionAmount = $request->get('transactionAmount');
+            if (isset($accountNumber) && isset($transactionAmount)) {
+                $url = env('VALIDATION_GATEWAY') . '/validateMobileMoneyAccount';
+                $post_data = [
+                    'accountNumber' => $accountNumber,
+                    'transactionAmount' => $transactionAmount,
+                    'accountType' => 'MOBILEMONEY',
+                    'vendorCode' => 'SHABELLE_APP',
+                    'password' => 'EVJ7O9V6Q6'
+                ];
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+                curl_setopt($ch, CURLOPT_TIMEOUT, 0);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization: Basic ' . base64_encode(env('SHABELLE_GATEWAY_USERNAME') . ':' . env('SHABELLE_GATEWAY_PASSWORD'))));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $result = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    $error_msg = curl_error($ch);
+                    Log::info('Validate Mobile Money Number Curl Error', [$error_msg]);
+                    return response(['success' => false, 'message' => 'Failure at Pivot Payments, Please contact support.']);
+                }
+                curl_close($ch);
+                $result = (json_decode($result, true));
+                Log::info('Validate Mobile Money Response', [$result]);
+                return response([
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'accountNumber' => $result['accountNumber'],
+                    'accountName' => $result['accountName'],
+                    'tranCharge' => $result['tranCharge'],
+                    'transactionAmount' => $result['transactionAmount']
+                ]);
+            } else {
+                return response(['status' => 'FAIL', 'message' => 'Invalid request, some parameters were not passed in the payload. Please update your app from google play store.']);
+            }
+        } catch (Exception $e) {
+            Log::info('Validate Mobile Money Exception Error', [$e->getMessage()]);
+            return response(['status' => 'FAIL', 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function validateBankAccount(Request $request)
+    {
+        try {
+            Log::info('Validate Bank Account Number Request', [$request]);
+            $accountNumber = $request->get('accountNumber');
+            $transactionAmount = $request->get('transactionAmount');
+            $bank = $request->get('bank');
+            if (isset($accountNumber) && isset($transactionAmount) && isset($bank)) {
+                $url = env('VALIDATION_GATEWAY') . '/validateBankAccount';
+                $post_data = [
+                    'accountNumber' => $accountNumber,
+                    'transactionAmount' => $transactionAmount,
+                    'bank' => $bank,
+                    'accountType' => 'BANK',
+                    'accountCategory' => 'INTERNAL',
+                    'vendorCode' => 'SHABELLE_APP',
+                    'password' => 'EVJ7O9V6Q6',
+                    'countryCode' => 'ETH'
+                ];
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+                curl_setopt($ch, CURLOPT_TIMEOUT, 0);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization: Basic ' . base64_encode(env('SHABELLE_GATEWAY_USERNAME') . ':' . env('SHABELLE_GATEWAY_PASSWORD'))));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $result = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    $error_msg = curl_error($ch);
+                    Log::info('Validate Bank Account Number Curl Error', [$error_msg]);
+                    return response(['success' => false, 'message' => 'Failure at Pivot Payments, Please contact support.']);
+                }
+                curl_close($ch);
+                $result = (json_decode($result, true));
+                Log::info('Validate Bank Account Response', [$result]);
+                return response([
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'accountNumber' => $result['accountNumber'],
+                    'accountName' => $result['accountName'],
+                    'tranCharge' => $result['tranCharge'],
+                    'transactionAmount' => $result['transactionAmount']
+                ]);
+            } else {
+                return response(['status' => 'FAIL', 'message' => 'Invalid request, some parameters were not passed in the payload. Please update your app from google play store.']);
+            }
+        } catch (Exception $e) {
+            Log::info('Validate Bank Account Exception Error', [$e->getMessage()]);
+            return response(['status' => 'FAIL', 'message' => $e->getMessage()]);
+        }
+    }
+
 
     public function makePayment(Request $request)
     {
