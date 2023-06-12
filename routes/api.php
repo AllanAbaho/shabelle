@@ -15,4 +15,5 @@ Route::group(array('prefix' => '/v1'), function () {
     Route::post('/checkStatus', 'App\Http\Controllers\PaymentController@checkStatus');
     Route::post('/validateMobileMoney', 'App\Http\Controllers\PaymentController@validateMobileMoney');
     Route::post('/validateBankAccount', 'App\Http\Controllers\PaymentController@validateBankAccount');
+    Route::post('/validatePayBillAccount', 'App\Http\Controllers\PaymentController@validatePayBillAccount');
 });

@@ -110,6 +110,58 @@ class PaymentController extends Controller
         }
     }
 
+    public function validatePayBillAccount(Request $request)
+    {
+        try {
+            Log::info('Validate Pay Bill Account Number Request', [$request]);
+            $accountNumber = $request->get('accountNumber');
+            $transactionAmount = $request->get('transactionAmount');
+            $serviceName = $request->get('serviceName');
+            if (isset($accountNumber) && isset($transactionAmount) && isset($serviceName)) {
+                $url = env('VALIDATION_GATEWAY') . '/validatePayBillAccount';
+                $post_data = [
+                    "accountNumber" => $accountNumber,
+                    "transactionAmount" => $transactionAmount,
+                    "accountType" => "PAYBILL",
+                    "accountCategory" => "POSTPAID",
+                    "serviceName" => $serviceName,
+                    "amount" => $transactionAmount,
+                    "vendorCode" => "SHABELLE_APP",
+                    "password" => "EVJ7O9V6Q6",
+                    "countryCode" => "ETH"
+                ];
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+                curl_setopt($ch, CURLOPT_TIMEOUT, 0);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization: Basic ' . base64_encode(env('SHABELLE_GATEWAY_USERNAME') . ':' . env('SHABELLE_GATEWAY_PASSWORD'))));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $result = curl_exec($ch);
+                if (curl_errno($ch)) {
+                    $error_msg = curl_error($ch);
+                    Log::info('Validate Pay Bill Account Number Curl Error', [$error_msg]);
+                    return response(['success' => false, 'message' => 'Failure at Pivot Payments, Please contact support.']);
+                }
+                curl_close($ch);
+                $result = (json_decode($result, true));
+                Log::info('Validate Pay Bill Account Response', [$result]);
+                return response([
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'accountNumber' => $result['accountNumber'],
+                    'accountName' => $result['accountName'],
+                    'tranCharge' => $result['tranCharge'], 
+                    'transactionAmount' => $result['transactionAmount'] ?? ''
+                ]);
+            } else {
+                return response(['status' => 'FAIL', 'message' => 'Invalid request, some parameters were not passed in the payload. Please update your app from google play store.']);
+            }
+        } catch (Exception $e) {
+            Log::info('Validate Pay Bill Account Exception Error', [$e->getMessage()]);
+            return response(['status' => 'FAIL', 'message' => $e->getMessage()]);
+        }
+    }
+
 
     public function makePayment(Request $request)
     {
