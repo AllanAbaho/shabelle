@@ -150,7 +150,7 @@ class PaymentController extends Controller
                     'message' => $result['message'],
                     'accountNumber' => $result['accountNumber'],
                     'accountName' => $result['accountName'],
-                    'tranCharge' => $result['tranCharge'], 
+                    'tranCharge' => $result['tranCharge'],
                     'transactionAmount' => $result['transactionAmount'] ?? ''
                 ]);
             } else {
@@ -251,6 +251,7 @@ class PaymentController extends Controller
             $serviceName = $request->get('serviceName');
             $senderName = $request->get('senderName');
             $receiverName = $request->get('receiverName');
+            $airline = 'Ethiopian Airlines';
 
             if (isset($toAccount) && isset($fromAccount) && isset($transactionAmount) && isset($narration) && isset($serviceName) && isset($senderName) && isset($receiverName)) {
                 $transactionId = mt_rand(10000000, 99999999) . $senderName;
@@ -287,7 +288,8 @@ class PaymentController extends Controller
                     'location' => 'Ethiopia',
                     "authCode" => "84848",
                     "tranCharge" => "300",
-                    "serviceFee" => "0"
+                    "serviceFee" => "0",
+                    "airline" => $airline
                 ];
 
                 $ch = curl_init($url);
